@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Blog & Insights | Akshay Bangar</title>
+<meta name="description" content="Read articles about software development, backend architecture, SaaS, and cold email infrastructure by Akshay Bangar.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://akshaybangarab.github.io/blog/">
+
+<!-- JSON-LD Schema -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  "name": "Blog & Insights | Akshay Bangar",
+  "url": "https://akshaybangarab.github.io/blog/",
+  "publisher": {
+    "@type": "Person",
+    "name": "Akshay Bangar"
+  }
+}
+</script>
+
+<meta name="theme-color" content="#0a0a0f">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/blog.css">
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+<div class="container">
+<a href="../index.html" class="nav-logo">Akshay Bangar</a>
+<div class="nav-links" id="nav-links">
+<button class="nav-close" id="nav-close" aria-label="Close menu">&times;</button>
+<a href="../index.html#home">Home</a>
+<a href="../index.html#about">About</a>
+<a href="../index.html#skills">Skills</a>
+<a href="../core-competencies.html">Core Competencies</a>
+<a href="../index.html#projects">Projects</a>
+<a href="../index.html#experience">Experience</a>
+<a href="../email-infrastructure.html">Email Infrastructure</a>
+<a href="../index.html#contact">Contact</a>
+</div>
+<div class="nav-overlay" id="nav-overlay"></div>
+<div class="nav-right">
+<a href="../index.html#contact" class="hire-badge" style="text-decoration:none">Available for Work</a>
+<button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+<button class="menu-toggle" id="menu-toggle" aria-label="Toggle menu">
+<span></span><span></span><span></span>
+</button>
+</div>
+</div>
+</nav>
+
+<!-- BLOG HERO -->
+<section class="blog-hero">
+<div class="blog-hero-grid"></div>
+<div class="container">
+<div class="blog-hero-content reveal">
+<h1 class="blog-hero-title">Insights & <span class="gradient-text">Articles</span></h1>
+<p class="blog-hero-desc">Thoughts on software architecture, building scalable SaaS products, and optimizing enterprise email infrastructure for high deliverability.</p>
+<div class="blog-filters">
+<button class="filter-btn active" data-filter="all">All Topics</button>
+<button class="filter-btn" data-filter="engineering">Engineering</button>
+<button class="filter-btn" data-filter="email">Email Infrastructure</button>
+<button class="filter-btn" data-filter="saas">SaaS</button>
+</div>
+</div>
+</div>
+</section>
+
+<main class="blog-main">
+<div class="container">
+<!-- FEATURED POST -->
+<div class="blog-section-heading reveal">Featured Post</div>
+<a href="email-marketing-guide.html" class="featured-post reveal" data-tags="email saas">
+<div class="featured-post-img">
+<span class="featured-badge">New</span>
+<svg class="cover-svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+<rect width="100%" height="100%" fill="#0a0a0f"/>
+<g opacity="0.3"><path d="M0,300 Q200,100 400,300 T800,300 L800,600 L0,600 Z" fill="#6366f1"/></g>
+<g opacity="0.2"><path d="M0,400 Q200,200 400,400 T800,400 L800,600 L0,600 Z" fill="#f59e0b"/></g>
+<circle cx="400" cy="300" r="100" fill="none" stroke="#818cf8" stroke-width="2" opacity="0.5"/>
+<circle cx="400" cy="300" r="120" fill="none" stroke="#818cf8" stroke-width="1" stroke-dasharray="5,5" opacity="0.3"/>
+<path d="M370,280 L430,280 L400,310 Z" fill="#f59e0b" opacity="0.8"/>
+<text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="24" font-weight="bold" opacity="0.7" transform="translate(0, 150)">Email Infrastructure</text>
+</svg>
+</div>
+<div class="featured-post-body">
+<div class="post-tags"><span class="post-tag">Email Infrastructure</span><span class="post-tag">SaaS Strategy</span></div>
+<h2 class="featured-post-title">Email Marketing in 2026: The Complete Strategy Guide</h2>
+<p class="featured-post-excerpt">Discover how to optimize your email marketing strategy for 2026. From setting up proper authentication protocols (SPF, DKIM, DMARC) to scaling cold outreach securely with PowerMTA and maximizing deliverability and ROI.</p>
+<div class="post-meta">
+<div class="post-author-mini">
+<img src="../images/photo_cut.jpeg" alt="Akshay Bangar" class="post-author-avatar">
+<span class="post-author-name">Akshay Bangar</span>
+</div>
+<span class="post-meta-sep"></span>
+<span class="post-date"><i class="fa-regular fa-calendar"></i> June 25, 2026</span>
+<span class="post-meta-sep"></span>
+<span class="post-reading-time"><i class="fa-regular fa-clock"></i> 10 min read</span>
+</div>
+<span class="post-link-btn">Read Article <i class="fa-solid fa-arrow-right"></i></span>
+</div>
+</a>
+
+<!-- BLOG GRID -->
+<div class="blog-grid-section">
+<div class="blog-section-heading reveal" style="transition-delay:0.1s">Latest Articles</div>
+<div id="no-results" class="no-results" style="display:none">
+<i class="fa-solid fa-ghost"></i>
+<p>No articles found for this topic yet.</p>
+</div>
+<div class="blog-grid">
+<!-- Card 1 (Same as featured for now since it's the only one) -->
+<a href="email-marketing-guide.html" class="blog-card reveal" data-tags="email saas" style="transition-delay:0.1s">
+<div class="blog-card-img">
+<svg viewBox="0 0 400 225" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+<rect width="100%" height="100%" fill="#0f172a"/>
+<circle cx="200" cy="112" r="60" fill="none" stroke="#6366f1" stroke-width="2" opacity="0.5"/>
+<path d="M170,100 L230,100 L200,130 Z" fill="#f59e0b" opacity="0.8"/>
+</svg>
+</div>
+<div class="blog-card-body">
+<span class="blog-preview-tag">Email Infrastructure</span>
+<h3 class="blog-card-title">Email Marketing in 2026: The Complete Strategy Guide</h3>
+<p class="blog-card-excerpt">A deep dive into setting up proper authentication protocols (SPF, DKIM, DMARC) and scaling cold outreach securely with PowerMTA.</p>
+<div class="blog-card-footer">
+<span class="blog-card-date">Jun 25, 2026</span>
+<span class="blog-card-readmore">Read <i class="fa-solid fa-arrow-right" style="font-size:0.75rem"></i></span>
+</div>
+</div>
+</a>
+<!-- Placeholder for future articles -->
+<div class="blog-card reveal" data-tags="engineering" style="transition-delay:0.2s; opacity: 0.5; pointer-events: none;">
+<div class="blog-card-img">
+<svg viewBox="0 0 400 225" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#1e293b"/></svg>
+</div>
+<div class="blog-card-body">
+<span class="blog-preview-tag">Engineering</span>
+<h3 class="blog-card-title">Building Scalable Node.js Microservices</h3>
+<p class="blog-card-excerpt">Coming soon. An overview of structuring Node.js applications for scale and maintainability using domain-driven design principles.</p>
+<div class="blog-card-footer">
+<span class="blog-card-date">Coming Soon</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+</main>
+
+<!-- FOOTER -->
+<footer class="footer" style="margin-top:0">
+<div class="container">
+<div class="footer-social">
+<a href="https://github.com/AkshayBangarAB" target="_blank" rel="noopener" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+<a href="https://www.linkedin.com/in/akshaybangarab/" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
+<a href="mailto:akshayab027@gmail.com" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+</div>
+<p>Copyright &copy; 2026 Akshay Bangar. All rights reserved.</p>
+</div>
+</footer>
+
+<button class="back-to-top" aria-label="Back to top">↑</button>
+
+<script src="../js/blog.js"></script>
+</body>
+</html>
