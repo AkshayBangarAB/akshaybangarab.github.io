@@ -28,45 +28,83 @@
 <meta name="twitter:image" content="https://akshaybangarab.github.io/images/photo_cut.jpeg">
 <meta name="twitter:image:alt" content="Akshay Bangar photo">
 
-<!-- JSON-LD Schema Markup -->
+<!-- JSON-LD Schema Markup — Person (for Google Knowledge Panel) -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Person",
+  "@id": "https://akshaybangarab.github.io/#person",
   "name": "Akshay Bangar",
+  "givenName": "Akshay",
+  "familyName": "Bangar",
+  "alternateName": ["AkshayBangarAB", "Akshay B", "Akshay AB", "akshaybangarab"],
   "url": "https://akshaybangarab.github.io/",
-  "image": "https://akshaybangarab.github.io/images/photo_cut.jpeg",
+  "image": {
+    "@type": "ImageObject",
+    "url": "https://akshaybangarab.github.io/images/photo_cut.jpeg",
+    "width": 400,
+    "height": 400,
+    "caption": "Akshay Bangar — Software Developer"
+  },
   "jobTitle": "Software Developer",
+  "description": "Akshay Bangar is a Software Developer from Pune, India, specializing in scalable backend systems, SaaS platforms, microservices architecture, and enterprise-grade email infrastructure.",
+  "gender": "Male",
+  "nationality": {
+    "@type": "Country",
+    "name": "India"
+  },
   "worksFor": {
     "@type": "Organization",
-    "name": "CloudLead Technologies Pvt Ltd"
+    "name": "CloudLead Technologies Pvt Ltd",
+    "url": "https://cloudlead.ai"
   },
-  "alumniOf": "Marathwada Mitra Mandal's Institute of Technology, Pune",
-  "sameAs": [
-    "https://github.com/AkshayBangarAB",
-    "https://www.linkedin.com/in/akshaybangarab/"
-  ],
+  "alumniOf": {
+    "@type": "EducationalOrganization",
+    "name": "Marathwada Mitra Mandal's Institute of Technology, Pune",
+    "url": "https://mmit.edu.in",
+    "parentOrganization": {
+      "@type": "EducationalOrganization",
+      "name": "Savitribai Phule Pune University (SPPU)"
+    }
+  },
+  "hasOccupation": {
+    "@type": "Occupation",
+    "name": "Software Engineer",
+    "occupationLocation": {
+      "@type": "City",
+      "name": "Pune"
+    },
+    "skills": "Node.js, React, MongoDB, PostgreSQL, Docker, REST APIs, Microservices, Email Infrastructure"
+  },
   "address": {
     "@type": "PostalAddress",
     "addressLocality": "Pune",
     "addressRegion": "Maharashtra",
-    "addressCountry": "India"
+    "addressCountry": "IN"
   },
-  "description": "Software Developer portfolio showcasing scalable backend systems, SaaS products, APIs, React, Node.js, MongoDB, Docker, and modern web applications."
+  "email": "mailto:akshayab027@gmail.com",
+  "sameAs": [
+    "https://github.com/AkshayBangarAB",
+    "https://www.linkedin.com/in/akshaybangarab/",
+    "https://x.com/akshaybangarab"
+  ],
   "knowsAbout": [
     "Software Development",
+    "Full Stack Development",
     "Backend Architecture",
+    "Node.js",
+    "React",
+    "Microservices",
     "SaaS Development",
     "Email Infrastructure",
-    "Cold Email Systems",
-    "SMTP Server Setup",
     "PowerMTA",
     "MailWizz",
-    "Email Deliverability",
-    "Email Authentication",
     "SPF",
     "DKIM",
-    "DMARC"
+    "DMARC",
+    "Docker",
+    "MongoDB",
+    "PostgreSQL"
   ],
   "makesOffer": {
     "@type": "Offer",
@@ -76,6 +114,27 @@
       "url": "https://akshaybangarab.github.io/email-infrastructure.html",
       "description": "Complete cold email infrastructure setup, SMTP server deployment, PowerMTA & MailWizz configuration, email authentication, and deliverability consulting."
     }
+  },
+  "mainEntityOfPage": {
+    "@type": "ProfilePage",
+    "@id": "https://akshaybangarab.github.io/",
+    "name": "Akshay Bangar — Software Developer Portfolio",
+    "dateCreated": "2024-01-01",
+    "dateModified": "2026-06-27"
+  }
+}
+</script>
+
+<!-- JSON-LD Schema — WebSite (for Sitelinks Search Box) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Akshay Bangar",
+  "alternateName": "Akshay Bangar Portfolio",
+  "url": "https://akshaybangarab.github.io/",
+  "publisher": {
+    "@id": "https://akshaybangarab.github.io/#person"
   }
 }
 </script>
