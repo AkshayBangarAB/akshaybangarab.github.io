@@ -18,13 +18,13 @@
 
 /* ── Blog Page Hero ── */
 .blog-hero {
-  min-height: 380px;
+  min-height: 250px;
   display: flex;
   align-items: center;
   position: relative;
   overflow: hidden;
   padding-top: 100px;
-  padding-bottom: 60px;
+  padding-bottom: 30px;
   background: var(--bg-primary);
 }
 .blog-hero::before {
@@ -121,7 +121,7 @@
 }
 
 /* ── Featured Post ── */
-.blog-main { padding: 60px 0 100px; }
+.blog-main { padding: 20px 0 100px; }
 
 .featured-post {
   display: grid;
