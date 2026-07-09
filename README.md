@@ -65,12 +65,7 @@ Check out the live version here:
 
 ## 🤝 Contributing
 
-Feedback, suggestions, and improvements are warmly welcomed! If you'd like to contribute:
-
-1. Fork this repository
-2. Create a new branch for your feature/fix
-3. Commit your changes with clear messages
-4. Open a Pull Request detailing your changes
+Feedback, suggestions, and improvements are warmly welcomed!
 
 ---
 
