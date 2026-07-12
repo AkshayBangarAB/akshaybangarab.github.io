@@ -172,6 +172,7 @@
 {
   "@context": "https://schema.org",
   "@type": "WebSite",
+  "@id": "https://akshaybangarab.github.io/#website",
   "name": "Akshay Bangar",
   "alternateName": "Akshay Bangar Portfolio",
   "url": "https://akshaybangarab.github.io/",
@@ -181,13 +182,55 @@
 }
 </script>
 
-<!-- JSON-LD Schema — BreadcrumbList -->
+<!-- JSON-LD Schema — BreadcrumbList (maps all pages under homepage) -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   "itemListElement": [
-    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://akshaybangarab.github.io/" }
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://akshaybangarab.github.io/" },
+    { "@type": "ListItem", "position": 2, "name": "About", "item": "https://akshaybangarab.github.io/about.html" },
+    { "@type": "ListItem", "position": 3, "name": "Email Infrastructure", "item": "https://akshaybangarab.github.io/email-infrastructure.html" },
+    { "@type": "ListItem", "position": 4, "name": "Core Competencies", "item": "https://akshaybangarab.github.io/core-competencies.html" },
+    { "@type": "ListItem", "position": 5, "name": "Blog", "item": "https://akshaybangarab.github.io/blog/" }
+  ]
+}
+</script>
+
+<!-- JSON-LD Schema — SiteNavigationElement (tells Google the site's nav hierarchy for sitelinks) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "itemListElement": [
+    {
+      "@type": "SiteNavigationElement",
+      "position": 1,
+      "name": "About Akshay Bangar",
+      "description": "Software Engineer from Pune — professional background, education, and experience.",
+      "url": "https://akshaybangarab.github.io/about.html"
+    },
+    {
+      "@type": "SiteNavigationElement",
+      "position": 2,
+      "name": "Email Infrastructure Services",
+      "description": "Cold email infrastructure setup, SMTP deployment, PowerMTA & MailWizz configuration.",
+      "url": "https://akshaybangarab.github.io/email-infrastructure.html"
+    },
+    {
+      "@type": "SiteNavigationElement",
+      "position": 3,
+      "name": "Core Competencies",
+      "description": "Technical skills and expertise in Node.js, React, MongoDB, system design, and more.",
+      "url": "https://akshaybangarab.github.io/core-competencies.html"
+    },
+    {
+      "@type": "SiteNavigationElement",
+      "position": 4,
+      "name": "Blog",
+      "description": "Technical articles on email infrastructure, backend development, and software engineering.",
+      "url": "https://akshaybangarab.github.io/blog/"
+    }
   ]
 }
 </script>
