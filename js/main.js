@@ -74,7 +74,7 @@
   // --- Typing Animation ---
   const typingEl = document.getElementById('typing-text');
   if (typingEl) {
-    const fullText = 'Backend Developer | SaaS Builder | System Designer | Problem Solver';
+    const fullText = 'Full Stack Developer | SaaS Builder | System Designer | Problem Solver';
     let charIdx = 0, deleting = false;
     function type() {
       if (deleting) {
