@@ -101,6 +101,17 @@
     revealEls.forEach(el => observer.observe(el));
   } else { revealEls.forEach(el => el.classList.add('visible')); }
 
+  // --- Animate On Scroll (New) ---
+  const animateEls = document.querySelectorAll('.animate-on-scroll');
+  if (animateEls.length && 'IntersectionObserver' in window) {
+    const animObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) { entry.target.classList.add('in-view'); animObserver.unobserve(entry.target); }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+    animateEls.forEach(el => animObserver.observe(el));
+  } else { animateEls.forEach(el => el.classList.add('in-view')); }
+
   // --- Smooth Scroll ---
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
@@ -132,5 +143,15 @@
       });
     }, { threshold: 0.5 });
     statEls.forEach(el => countObserver.observe(el));
+  }
+
+  // --- Skills Marquee ---
+  const marqueeContent = document.getElementById('skills-marquee-content');
+  const marqueeContainer = document.getElementById('skills-marquee-container');
+  if (marqueeContent && marqueeContainer) {
+    const clone = marqueeContent.cloneNode(true);
+    clone.setAttribute('aria-hidden', 'true');
+    clone.id = 'skills-marquee-content-clone';
+    marqueeContainer.appendChild(clone);
   }
 })();

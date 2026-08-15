@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How to Set Up SPF, DKIM, and DMARC for Email Deliverability (Complete DNS Guide) | Akshay Bangar</title>
+<meta name="description" content="Step-by-step guide to configuring SPF, DKIM, and DMARC DNS records for email deliverability. Includes real DNS examples, PowerMTA DKIM signing config, alignment troubleshooting, and validation commands.">
+<meta name="keywords" content="SPF DKIM DMARC setup, email authentication setup, SPF record setup guide, DKIM configuration step by step, DMARC policy setup, email deliverability DNS, email going to spam fix, SPF 10 lookup limit, DKIM key rotation, DMARC alignment, email authentication best practices, PowerMTA DKIM">
+<meta name="author" content="Akshay Bangar">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://akshaybangarab.github.io/blog/spf-dkim-dmarc-setup-guide.html">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://akshaybangarab.github.io/blog/spf-dkim-dmarc-setup-guide.html">
+<meta property="og:title" content="How to Set Up SPF, DKIM, and DMARC for Email Deliverability (Complete DNS Guide)">
+<meta property="og:description" content="Step-by-step guide to configuring SPF, DKIM, and DMARC DNS records. Includes real DNS examples, PowerMTA DKIM config, alignment troubleshooting, and validation commands.">
+<meta property="article:published_time" content="2026-08-14T08:00:00+00:00">
+<meta property="article:author" content="Akshay Bangar">
+<meta property="og:image" content="https://akshaybangarab.github.io/images/spf-dkim-dmarc-cover.jpg">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:url" content="https://akshaybangarab.github.io/blog/spf-dkim-dmarc-setup-guide.html">
+<meta name="twitter:title" content="How to Set Up SPF, DKIM, and DMARC for Email Deliverability (Complete DNS Guide)">
+<meta name="twitter:description" content="Step-by-step guide to configuring SPF, DKIM, and DMARC DNS records. Includes real DNS examples, PowerMTA DKIM config, alignment troubleshooting, and validation commands.">
+<meta name="twitter:image" content="https://akshaybangarab.github.io/images/spf-dkim-dmarc-cover.jpg">
+
+<!-- JSON-LD Schema Markup — Article -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "How to Set Up SPF, DKIM, and DMARC for Email Deliverability (Complete DNS Guide)",
+  "description": "Step-by-step guide to configuring SPF, DKIM, and DMARC DNS records for email deliverability. Includes real DNS examples, PowerMTA DKIM signing config, alignment troubleshooting, and validation commands.",
+  "image": "https://akshaybangarab.github.io/images/spf-dkim-dmarc-cover.jpg",
+  "author": {
+    "@type": "Person",
+    "@id": "https://akshaybangarab.github.io/#person",
+    "name": "Akshay Bangar",
+    "url": "https://akshaybangarab.github.io/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Akshay Bangar",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://akshaybangarab.github.io/images/logo-akshay-bangar.png",
+        "width": 512,
+        "height": 512
+    }
+  },
+  "datePublished": "2026-08-14T08:00:00+00:00",
+  "dateModified": "2026-08-14T08:00:00+00:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://akshaybangarab.github.io/blog/spf-dkim-dmarc-setup-guide.html"
+  },
+  "wordCount": 5500
+}
+</script>
+
+<!-- JSON-LD Schema Markup — HowTo -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "HowTo",
+  "name": "How to Set Up SPF, DKIM, and DMARC for Email Deliverability",
+  "description": "A complete step-by-step guide to configuring the three essential email authentication protocols — SPF, DKIM, and DMARC — on your domain's DNS.",
+  "step": [
+    {
+      "@type": "HowToStep",
+      "name": "Set up your SPF record",
+      "text": "Create a TXT DNS record at your domain root that specifies which IP addresses and servers are authorized to send email on behalf of your domain. Use the v=spf1 syntax with include and ip4 mechanisms."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Set up DKIM signing",
+      "text": "Generate a 2048-bit RSA key pair, publish the public key as a TXT record at selector._domainkey.yourdomain.com, and configure your mail server to sign outgoing messages with the private key."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Set up your DMARC policy",
+      "text": "Create a TXT record at _dmarc.yourdomain.com that specifies your DMARC policy (none, quarantine, or reject), alignment mode, and reporting address using the rua tag."
+    },
+    {
+      "@type": "HowToStep",
+      "name": "Validate your configuration",
+      "text": "Use dig, nslookup, MXToolbox, and mail-tester.com to verify all three records are correctly published and passing authentication checks."
+    }
+  ]
+}
+</script>
+
+<!-- JSON-LD Schema Markup — FAQ -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Do I need SPF, DKIM, and DMARC? Can I skip one?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "You need all three. SPF tells receiving servers which IPs can send for your domain. DKIM cryptographically proves the email wasn't altered in transit. DMARC ties them together with a policy and alignment requirements. Since 2024, Google and Yahoo require all three for bulk senders (5,000+ emails/day). Without all three, your emails will be rejected or sent to spam."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What DMARC policy should I start with?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Start with p=none. This is monitor-only mode — it tells receiving servers to deliver all emails normally but send you reports about authentication failures. Run p=none for 2-4 weeks while monitoring your DMARC reports. Once you've confirmed all legitimate sending sources pass authentication, move to p=quarantine, then eventually p=reject."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the SPF 10 DNS lookup limit and how do I fix it?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The SPF specification (RFC 7208) limits the number of DNS lookups an SPF record can trigger to 10. Each 'include', 'a', 'mx', and 'redirect' mechanism counts as one lookup. If your SPF record exceeds 10 lookups, it results in a 'permerror' and SPF fails completely. Fix this by removing unused includes, replacing includes with direct ip4/ip6 entries where possible (called SPF flattening), or using subdomains with separate SPF records for different sending services."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I check if my SPF, DKIM, and DMARC records are set up correctly?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use these methods: (1) Command line: run 'dig TXT yourdomain.com' for SPF, 'dig TXT selector._domainkey.yourdomain.com' for DKIM, and 'dig TXT _dmarc.yourdomain.com' for DMARC. (2) Online tools: MXToolbox SuperTool, Google Admin Toolbox Check MX, or dmarcian.com. (3) Send a test email to mail-tester.com — it gives you a score out of 10 and flags any authentication issues."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What happens if I don't set up email authentication?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Without proper email authentication, your emails will either land in spam or be rejected outright by major providers. Gmail, Yahoo, and Microsoft now enforce authentication at the SMTP level — meaning unauthenticated emails from bulk senders are blocked before they even reach the spam folder. Your domain is also vulnerable to spoofing attacks where bad actors send phishing emails pretending to be you."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How often should I rotate my DKIM keys?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Rotate your DKIM keys every 6 to 12 months. This limits the exposure window if a private key is compromised. The process involves generating a new key pair with a new selector, publishing the new public key in DNS, updating your mail server to sign with the new private key, and keeping the old selector active in DNS for 48-72 hours to allow in-transit emails to validate."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is DMARC alignment and why do my emails still fail with SPF and DKIM set up?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "DMARC alignment means the domain in the visible 'From' header must match the domain used for SPF (Return-Path/envelope sender) or DKIM (d= domain). Even if SPF and DKIM both pass individually, if neither aligns with the From domain, DMARC fails. This is the most common cause of 'everything looks right but it still fails.' Check your email headers — look at the Return-Path domain and the DKIM d= domain, and make sure at least one matches your From domain."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can SPF, DKIM, and DMARC prevent phishing?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, when properly configured with DMARC set to p=reject, these protocols significantly reduce domain spoofing and phishing. SPF ensures only authorized servers can send from your domain, DKIM proves message integrity, and DMARC enforces that the visible From address aligns with authenticated domains. A p=reject policy tells receiving servers to discard any email that fails authentication, blocking spoofed emails from reaching inboxes."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I set up SPF, DKIM, and DMARC for multiple domains or subdomains?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Each domain needs its own SPF and DMARC records. For DKIM, you need a key pair per domain (or per domain+selector combination). For subdomains, SPF records must be set individually — subdomains do not inherit the parent domain's SPF. However, DMARC policies cascade to subdomains unless overridden with a separate _dmarc.subdomain.example.com record. If you send from mail.example.com, set an SPF record at mail.example.com and either use the parent's DMARC or create a subdomain-specific one."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I read and understand DMARC aggregate reports?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "DMARC aggregate reports (rua) are XML files sent by receiving servers that show: (1) which IPs sent email using your domain, (2) whether those emails passed or failed SPF and DKIM, (3) the DMARC alignment result, and (4) the volume of emails per source. Use a free DMARC report analyzer (like dmarcian, Postmark, or EasyDMARC) to parse the XML into readable dashboards. Focus on identifying unauthorized senders and fixing legitimate sources that are failing alignment."
+      }
+    }
+  ]
+}
+</script>
+
+<!-- JSON-LD Schema — BreadcrumbList -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://akshaybangarab.github.io/" },
+    { "@type": "ListItem", "position": 2, "name": "Blog", "item": "https://akshaybangarab.github.io/blog/" },
+    { "@type": "ListItem", "position": 3, "name": "SPF DKIM DMARC Setup Guide", "item": "https://akshaybangarab.github.io/blog/spf-dkim-dmarc-setup-guide.html" }
+  ]
+}
+</script>
+
+<meta name="theme-color" content="#0a0a0f">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+<link rel="stylesheet" href="../css/style.css">
+<link rel="stylesheet" href="../css/blog.css">
+</head>
+<body>
+
+<!-- Progress Bar -->
+<div id="reading-progress"></div>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+<div class="container">
+<a href="../index.html" class="nav-logo">Akshay Bangar</a>
+<div class="nav-links" id="nav-links">
+<button class="nav-close" id="nav-close" aria-label="Close menu">&times;</button>
+<a href="../index.html#home">Home</a>
+<a href="../index.html#about">About</a>
+<a href="index.html" class="active">Blog</a>
+<a href="../core-competencies.html">Core Competencies</a>
+<a href="../email-infrastructure.html">Email Infrastructure</a>
+</div>
+<div class="nav-overlay" id="nav-overlay"></div>
+<div class="nav-right">
+<button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme"><i class="fa-solid fa-moon"></i></button>
+<button class="menu-toggle" id="menu-toggle" aria-label="Toggle menu">
+<span></span><span></span><span></span>
+</button>
+</div>
+</div>
+</nav>
+
+<header class="article-hero">
+<div class="article-hero-bg">
+<img src="../images/spf-dkim-dmarc-cover.jpg" alt="SPF DKIM DMARC Email Authentication Setup Guide" style="width:100%;height:100%;object-fit:cover;opacity:0.6;">
+</div>
+<div class="container">
+<div class="article-breadcrumb">
+<a href="../index.html">Home</a> <i class="fa-solid fa-chevron-right"></i>
+<a href="index.html">Blog</a> <i class="fa-solid fa-chevron-right"></i>
+<span>SPF, DKIM & DMARC Setup</span>
+</div>
+
+<div class="article-hero-inner reveal">
+<div class="post-tags article-hero-tags">
+<span class="post-tag">Email Infrastructure</span>
+<span class="post-tag">Deliverability</span>
+<span class="post-tag">DNS</span>
+</div>
+<h1 class="article-hero-title">How to Set Up SPF, DKIM, and DMARC for Email Deliverability (Complete DNS Guide)</h1>
+<p class="article-hero-subtitle">The exact DNS records, validation commands, and PowerMTA config I use to pass authentication on every domain — plus the alignment mistakes that silently kill your deliverability.</p>
+
+<div class="article-hero-meta">
+<div class="article-meta-item"><i class="fa-regular fa-calendar"></i> Aug 14, 2026</div>
+<div class="article-meta-item"><i class="fa-regular fa-clock"></i> 22 min read</div>
+<div class="article-meta-item"><i class="fa-regular fa-user"></i> Akshay Bangar</div>
+</div>
+</div>
+
+</div> <!-- /container -->
+</header>
+
+<main class="container">
+<div class="article-layout">
+<div class="article-body-col">
+<!-- AUTHOR CARD -->
+<div class="author-card reveal">
+<div class="author-avatar-wrap">
+<img src="../images/akshay-bangar-software-engineer.jpg" alt="Akshay Bangar" class="author-avatar">
+<div class="author-verified"><i class="fa-solid fa-check"></i></div>
+</div>
+<div class="author-info">
+<div class="author-label">Written By</div>
+<div class="author-name">Akshay Bangar</div>
+<div class="author-title">Backend Engineer & Email Infrastructure Specialist</div>
+<p class="author-bio">I configure SPF, DKIM, and DMARC on every domain I manage for high-volume email infrastructure. This guide covers the exact process I follow — including the alignment mistakes I've learned to catch before they destroy deliverability.</p>
+<div class="author-socials">
+<a href="https://x.com/akshaybangarab" class="author-social-link" target="_blank" rel="noopener"><i class="fa-brands fa-twitter"></i></a>
+<a href="https://linkedin.com/in/akshaybangarab" class="author-social-link" target="_blank" rel="noopener"><i class="fa-brands fa-linkedin"></i></a>
+<a href="https://github.com/AkshayBangarAB" class="author-social-link" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i></a>
+</div>
+</div>
+</div>
+
+<!-- ARTICLE CONTENT -->
+<div class="article-content">
+<p>If your emails are landing in spam — or getting silently rejected — the first thing to check is your email authentication. SPF, DKIM, and DMARC are the three DNS-based protocols that tell receiving mail servers: <strong>"This email legitimately came from us, and it wasn't tampered with."</strong></p>
+
+<p>Without all three configured correctly, Gmail, Yahoo, and Outlook will either dump your emails into spam or block them entirely at the SMTP level. Since 2024, this isn't optional — Google and Yahoo <em>require</em> SPF, DKIM, and DMARC for any sender pushing more than 5,000 emails per day. In 2026, Microsoft followed suit.</p>
+
+<p>I've configured these records on dozens of sending domains — for cold email infrastructure, transactional email, and marketing campaigns running through PowerMTA and MailWizz. This guide is the exact process I follow every time, with real DNS record examples and the validation commands I run to confirm everything works.</p>
+
+<div class="callout callout-info">
+<i class="fa-solid fa-lightbulb callout-icon"></i>
+<div class="callout-body">
+<strong>Who this guide is for:</strong> Anyone who sends email from their own domain — whether through a dedicated SMTP server (PowerMTA, Postfix), an ESP (Mailchimp, SendGrid), Google Workspace, or cold email platforms. The DNS setup is the same regardless of your sending method.
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="what-are-spf-dkim-dmarc">1. What Are SPF, DKIM, and DMARC? (Quick Overview)</h2>
+
+<p>Before jumping into DNS records, here's what each protocol does in one sentence:</p>
+
+<h3 id="spf-overview">SPF — Who Can Send on Your Behalf</h3>
+<p><strong>SPF (Sender Policy Framework)</strong> is a DNS TXT record that lists the IP addresses and servers authorized to send email from your domain. When a receiving server gets an email claiming to be from <code>yourdomain.com</code>, it checks your SPF record to see if the sending server's IP is on the list. If not, SPF fails.</p>
+
+<h3 id="dkim-overview">DKIM — Proving the Email Wasn't Tampered With</h3>
+<p><strong>DKIM (DomainKeys Identified Mail)</strong> adds a cryptographic digital signature to the headers of every outgoing email. The receiving server uses a public key published in your DNS to verify this signature. If the email content or headers were modified in transit, the signature won't match and DKIM fails.</p>
+
+<h3 id="dmarc-overview">DMARC — The Policy That Ties It All Together</h3>
+<p><strong>DMARC (Domain-based Message Authentication, Reporting, and Conformance)</strong> tells receiving servers what to do when SPF or DKIM checks fail. It also adds an <strong>alignment</strong> requirement — meaning the domain in the visible "From" header must match the domain used in SPF or DKIM. DMARC also gives you reporting, so you can see who is sending email using your domain.</p>
+
+<h3 id="how-they-work-together">How All Three Work Together</h3>
+
+<p>Here's what happens when Gmail receives an email from your domain:</p>
+
+<ol>
+<li><strong>SPF check:</strong> Gmail looks up your SPF record and checks if the sending IP is authorized → Pass or Fail</li>
+<li><strong>DKIM check:</strong> Gmail retrieves your DKIM public key from DNS and verifies the email's cryptographic signature → Pass or Fail</li>
+<li><strong>DMARC check:</strong> Gmail checks if at least one of SPF or DKIM <em>both passed AND aligned</em> with the From domain. Then it reads your DMARC policy to decide what to do with failures.</li>
+</ol>
+
+<div class="callout callout-warning">
+<i class="fa-solid fa-triangle-exclamation callout-icon"></i>
+<div class="callout-body">
+<strong>Key point most guides miss:</strong> SPF and DKIM can both <em>pass</em> individually, but DMARC can still <em>fail</em> if neither result aligns with the From domain. Alignment is the #1 hidden cause of deliverability problems. I cover this in detail in <a href="#alignment">Section 7</a>.
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="why-mandatory">2. Why Email Authentication Is Mandatory</h2>
+
+<h3 id="bulk-sender-requirements">Google, Yahoo, and Microsoft's Bulk Sender Requirements</h3>
+
+<p>As of 2026, all major inbox providers enforce these requirements for bulk senders (5,000+ emails/day to their users):</p>
+
+<div style="overflow-x:auto;">
+<table class="comparison-table">
+<thead>
+<tr><th>Requirement</th><th>Gmail</th><th>Yahoo</th><th>Microsoft</th></tr>
+</thead>
+<tbody>
+<tr><td>SPF or DKIM (at minimum)</td><td>✅ Required</td><td>✅ Required</td><td>✅ Required</td></tr>
+<tr><td>DMARC record published</td><td>✅ Required</td><td>✅ Required</td><td>✅ Required</td></tr>
+<tr><td>SPF/DKIM alignment with From domain</td><td>✅ Required</td><td>✅ Required</td><td>✅ Required</td></tr>
+<tr><td>One-click unsubscribe header</td><td>✅ Required</td><td>✅ Required</td><td>Recommended</td></tr>
+<tr><td>Spam complaint rate &lt; 0.3%</td><td>✅ Required (&lt;0.1% ideal)</td><td>✅ Required</td><td>✅ Required</td></tr>
+<tr><td>Valid forward/reverse DNS (PTR)</td><td>✅ Required</td><td>✅ Required</td><td>✅ Required</td></tr>
+<tr><td>TLS encryption</td><td>✅ Required</td><td>✅ Required</td><td>✅ Required</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="what-happens-without-auth">What Happens If You Don't Set Up Authentication</h3>
+
+<p>Without proper authentication, your emails don't just go to spam — in 2026, they're rejected at the SMTP level:</p>
+
+<ul>
+<li><strong>Gmail:</strong> Returns <code>550-5.7.26</code> — "This mail is unauthenticated... rejected due to domain's DMARC policy"</li>
+<li><strong>Yahoo:</strong> Returns <code>553 5.7.2</code> — "Sender domain authentication not aligned"</li>
+<li><strong>Outlook:</strong> Silently routes to spam or returns <code>550 5.7.515</code> for DMARC failures</li>
+</ul>
+
+<p>Your domain is also vulnerable to <strong>spoofing</strong> — anyone can send phishing emails pretending to be you, and without DMARC at <code>p=reject</code>, receiving servers have no instruction to block those fakes.</p>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="spf-setup">3. Step 1 — Set Up Your SPF Record</h2>
+
+<h3 id="how-spf-works">How SPF Works</h3>
+
+<p>SPF is a single TXT record published at your domain root. When a receiving server gets an email with a <code>Return-Path</code> (envelope sender) of <code>@yourdomain.com</code>, it queries <code>yourdomain.com</code> for TXT records and looks for one starting with <code>v=spf1</code>.</p>
+
+<p>The record lists the authorized sending sources using <strong>mechanisms</strong>:</p>
+
+<div style="overflow-x:auto;">
+<table class="comparison-table">
+<thead>
+<tr><th>Mechanism</th><th>What It Does</th><th>Example</th></tr>
+</thead>
+<tbody>
+<tr><td><code>ip4</code></td><td>Authorizes a specific IPv4 address or range</td><td><code>ip4:198.51.100.25</code></td></tr>
+<tr><td><code>ip6</code></td><td>Authorizes a specific IPv6 address or range</td><td><code>ip6:2001:db8::/32</code></td></tr>
+<tr><td><code>include</code></td><td>References another domain's SPF record</td><td><code>include:_spf.google.com</code></td></tr>
+<tr><td><code>a</code></td><td>Authorizes the IPs in the domain's A record</td><td><code>a</code></td></tr>
+<tr><td><code>mx</code></td><td>Authorizes the IPs of the domain's MX servers</td><td><code>mx</code></td></tr>
+<tr><td><code>~all</code></td><td>Soft fail — mark as suspicious but don't reject</td><td>Used at end of record</td></tr>
+<tr><td><code>-all</code></td><td>Hard fail — reject unauthorized senders</td><td>Used at end of record</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="building-spf">Building Your SPF Record (Exact Syntax)</h3>
+
+<p>Here's my standard SPF record for a domain sending through a dedicated PowerMTA server:</p>
+
+<pre><code>v=spf1 ip4:198.51.100.25 -all</code></pre>
+
+<p>Translation: "Only the server at <code>198.51.100.25</code> is authorized to send email for this domain. Reject everything else."</p>
+
+<h3 id="spf-examples">SPF Record Examples for Common Setups</h3>
+
+<p><strong>Google Workspace only:</strong></p>
+<pre><code>v=spf1 include:_spf.google.com -all</code></pre>
+
+<p><strong>Google Workspace + SendGrid:</strong></p>
+<pre><code>v=spf1 include:_spf.google.com include:sendgrid.net -all</code></pre>
+
+<p><strong>Dedicated SMTP server (PowerMTA) + Google Workspace:</strong></p>
+<pre><code>v=spf1 ip4:198.51.100.25 ip4:198.51.100.26 include:_spf.google.com -all</code></pre>
+
+<p><strong>Multiple dedicated IPs + Mailchimp + HubSpot:</strong></p>
+<pre><code>v=spf1 ip4:198.51.100.25 ip4:198.51.100.26 include:servers.mcsv.net include:_spf.hubspot.com include:_spf.google.com -all</code></pre>
+
+<div class="callout callout-warning">
+<i class="fa-solid fa-triangle-exclamation callout-icon"></i>
+<div class="callout-body">
+<strong>Use <code>-all</code> (hard fail), not <code>~all</code> (soft fail).</strong> In 2026, soft fail is treated almost identically to hard fail by Gmail and Yahoo. Using <code>-all</code> gives a clearer signal that you take authentication seriously. Only use <code>~all</code> temporarily during initial setup while you confirm all sending sources are listed.
+</div>
+</div>
+
+<h3 id="spf-lookup-limit">The SPF 10 DNS Lookup Limit (and How to Fix It)</h3>
+
+<p>This trips up almost everyone who uses multiple email services. The SPF specification (RFC 7208) limits SPF records to <strong>a maximum of 10 DNS lookups</strong>. Each <code>include</code>, <code>a</code>, <code>mx</code>, and <code>redirect</code> mechanism counts as one lookup — and nested includes count too.</p>
+
+<p>If your SPF record exceeds 10 lookups, the entire SPF check returns a <strong>permanent error (permerror)</strong> — which means SPF <em>fails for every email</em>.</p>
+
+<p><strong>How to check your lookup count:</strong></p>
+<pre><code># Use MXToolbox SPF checker:
+# https://mxtoolbox.com/spf.aspx
+
+# Or count manually — each of these = 1 lookup:
+include:_spf.google.com        # 1 (but _spf.google.com itself has nested includes)
+include:sendgrid.net           # 1
+include:servers.mcsv.net       # 1
+include:_spf.hubspot.com       # 1
+a                              # 1
+mx                             # 1</code></pre>
+
+<p><strong>How to fix it when you exceed 10 lookups:</strong></p>
+
+<ol>
+<li><strong>Remove services you no longer use</strong> — audit your SPF record quarterly</li>
+<li><strong>Replace <code>include</code> with <code>ip4</code></strong> — if a service has stable IPs, use direct IP entries instead (these don't count toward the limit)</li>
+<li><strong>Use subdomains for different services</strong> — send marketing email from <code>marketing.yourdomain.com</code> with its own SPF record, transactional from <code>mail.yourdomain.com</code></li>
+<li><strong>Remove <code>a</code> and <code>mx</code> mechanisms</strong> — unless your web server or MX server actually sends email, you don't need these</li>
+</ol>
+
+<h3 id="validate-spf">Validating Your SPF Record</h3>
+
+<pre><code># Check your SPF record from the command line:
+dig TXT yourdomain.com +short | grep spf
+
+# Expected output:
+"v=spf1 ip4:198.51.100.25 include:_spf.google.com -all"
+
+# Or use nslookup (Windows):
+nslookup -type=txt yourdomain.com</code></pre>
+
+<p>Confirm using <a href="https://mxtoolbox.com/spf.aspx" target="_blank" rel="noopener">MXToolbox SPF Checker</a> — it will show you the full lookup chain and flag any errors.</p>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="dkim-setup">4. Step 2 — Set Up DKIM Signing</h2>
+
+<h3 id="how-dkim-works">How DKIM Works</h3>
+
+<p>DKIM uses public-key cryptography. Your mail server signs every outgoing email with a <strong>private key</strong>. The receiving server looks up the corresponding <strong>public key</strong> in your DNS (at <code>selector._domainkey.yourdomain.com</code>) and uses it to verify the signature.</p>
+
+<p>If the email body or certain headers were modified after signing (by a relay, forwarding service, or attacker), the signature won't match and DKIM fails.</p>
+
+<h3 id="generate-dkim-keys">Generating DKIM Keys</h3>
+
+<p>Generate a 2048-bit RSA key pair:</p>
+
+<pre><code># Generate the private key
+openssl genrsa -out dkim_private.key 2048
+
+# Extract the public key
+openssl rsa -in dkim_private.key -pubout -out dkim_public.key
+
+# View the public key (you'll need this for DNS)
+cat dkim_public.key</code></pre>
+
+<p>The public key output looks like this (headers removed for DNS):</p>
+<pre><code>MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2K4PavXoNY8eGK2u
+phCdbO0l3W3aTOiyOBQDG3P1WT2R... (continues)</code></pre>
+
+<div class="callout callout-info">
+<i class="fa-solid fa-lightbulb callout-icon"></i>
+<div class="callout-body">
+<strong>Always use 2048-bit keys.</strong> 1024-bit keys are considered weak and some providers will flag them. 2048-bit is the current standard and will remain secure for years to come.
+</div>
+</div>
+
+<h3 id="publish-dkim-dns">Publishing the DKIM DNS Record</h3>
+
+<p>Create a TXT record at <code>selector._domainkey.yourdomain.com</code>. The "selector" is a label you choose — it identifies which key pair to use (useful when rotating keys).</p>
+
+<p>I use a date-based selector format for easy tracking:</p>
+
+<pre><code># DNS Record:
+# Host:  s2026._domainkey.yourdomain.com
+# Type:  TXT
+# Value:
+v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2K4PavXoNY8eGK2uphCdbO0l3W3aTOiyOBQDG3P1WT2R...</code></pre>
+
+<p><strong>Record breakdown:</strong></p>
+<ul>
+<li><code>v=DKIM1</code> — DKIM version (always DKIM1)</li>
+<li><code>k=rsa</code> — key type (RSA is standard)</li>
+<li><code>p=MII...</code> — your public key (the full base64-encoded key, no line breaks)</li>
+</ul>
+
+<div class="callout callout-warning">
+<i class="fa-solid fa-triangle-exclamation callout-icon"></i>
+<div class="callout-body">
+<strong>Watch for DNS character limits.</strong> Many DNS providers have a 255-character limit per TXT record string. For 2048-bit keys, you'll need to split the value into multiple quoted strings: <code>"v=DKIM1; k=rsa; p=MIIBIj..." "ANBgkqhk..."</code>. Most DNS control panels handle this automatically, but verify it with <code>dig</code> after publishing.
+</div>
+</div>
+
+<h3 id="dkim-powermta">Configuring DKIM Signing in PowerMTA</h3>
+
+<p>If you run PowerMTA, here's the actual config I use in <code>/etc/pmta/config</code>:</p>
+
+<pre><code># ── DKIM Signing Configuration ──
+domain-key s2026, yourdomain.com, /etc/pmta/keys/yourdomain.com/dkim_private.key
+
+<domain yourdomain.com>
+  dkim-sign yes
+  dkim-identity @yourdomain.com
+  dkim-selector s2026
+  dkim-key /etc/pmta/keys/yourdomain.com/dkim_private.key
+  dkim-headers from:to:subject:date:message-id:content-type:mime-version
+</domain></code></pre>
+
+<p><strong>What each directive does:</strong></p>
+<ul>
+<li><code>dkim-sign yes</code> — enables signing for this domain</li>
+<li><code>dkim-identity</code> — the <code>d=</code> domain in the DKIM signature (must match your From domain for DMARC alignment)</li>
+<li><code>dkim-selector</code> — maps to the DNS record at <code>s2026._domainkey.yourdomain.com</code></li>
+<li><code>dkim-headers</code> — which headers to include in the signature (always include <code>from</code>)</li>
+</ul>
+
+<p>After updating the config, restart PowerMTA:</p>
+<pre><code>sudo pmta reload</code></pre>
+
+<h3 id="validate-dkim">Validating Your DKIM Signature</h3>
+
+<pre><code># Check your DKIM DNS record:
+dig TXT s2026._domainkey.yourdomain.com +short
+
+# Expected output:
+"v=DKIM1; k=rsa; p=MIIBIjANBgkqhki..."
+
+# Send a test email to a Gmail address, then check the email headers.
+# Look for:
+# dkim=pass header.d=yourdomain.com header.s=s2026</code></pre>
+
+<p>Or send an email to <a href="https://www.mail-tester.com" target="_blank" rel="noopener">mail-tester.com</a> — it will tell you if DKIM passes and show you the exact signature details.</p>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="dmarc-setup">5. Step 3 — Set Up Your DMARC Policy</h2>
+
+<h3 id="how-dmarc-works">How DMARC Works</h3>
+
+<p>DMARC is a TXT record published at <code>_dmarc.yourdomain.com</code>. It does three things:</p>
+<ol>
+<li><strong>Requires alignment</strong> — at least one of SPF or DKIM must pass AND align with the From domain</li>
+<li><strong>Sets a policy</strong> — tells receiving servers what to do with emails that fail authentication</li>
+<li><strong>Enables reporting</strong> — sends you aggregate and forensic reports about authentication results</li>
+</ol>
+
+<h3 id="dmarc-policies">DMARC Policy Options: none vs quarantine vs reject</h3>
+
+<div style="overflow-x:auto;">
+<table class="comparison-table">
+<thead>
+<tr><th>Policy</th><th>Tag</th><th>What It Does</th><th>When to Use</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>None</strong></td><td><code>p=none</code></td><td>Monitor only — deliver all emails, send reports</td><td>Initial setup and monitoring phase (first 2-4 weeks)</td></tr>
+<tr><td><strong>Quarantine</strong></td><td><code>p=quarantine</code></td><td>Send failing emails to spam folder</td><td>After confirming legitimate sources pass (weeks 4-8)</td></tr>
+<tr><td><strong>Reject</strong></td><td><code>p=reject</code></td><td>Block failing emails entirely — don't deliver</td><td>Full protection after all sources are verified</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="building-dmarc">Building Your DMARC Record</h3>
+
+<p>Here's my standard DMARC record:</p>
+
+<pre><code># DNS Record:
+# Host:  _dmarc.yourdomain.com
+# Type:  TXT
+# Value:
+v=DMARC1; p=none; rua=mailto:dmarc-reports@yourdomain.com; ruf=mailto:dmarc-forensic@yourdomain.com; adkim=r; aspf=r; pct=100; fo=1</code></pre>
+
+<p><strong>Tag breakdown:</strong></p>
+<div style="overflow-x:auto;">
+<table class="comparison-table">
+<thead>
+<tr><th>Tag</th><th>Value</th><th>What It Does</th></tr>
+</thead>
+<tbody>
+<tr><td><code>v</code></td><td><code>DMARC1</code></td><td>Protocol version (always DMARC1)</td></tr>
+<tr><td><code>p</code></td><td><code>none</code></td><td>Policy for your domain (start with none)</td></tr>
+<tr><td><code>rua</code></td><td><code>mailto:...</code></td><td>Email address for aggregate reports (daily XML summaries)</td></tr>
+<tr><td><code>ruf</code></td><td><code>mailto:...</code></td><td>Email address for forensic/failure reports (per-message details)</td></tr>
+<tr><td><code>adkim</code></td><td><code>r</code></td><td>DKIM alignment mode: <code>r</code> = relaxed, <code>s</code> = strict</td></tr>
+<tr><td><code>aspf</code></td><td><code>r</code></td><td>SPF alignment mode: <code>r</code> = relaxed, <code>s</code> = strict</td></tr>
+<tr><td><code>pct</code></td><td><code>100</code></td><td>Percentage of emails the policy applies to</td></tr>
+<tr><td><code>fo</code></td><td><code>1</code></td><td>Generate forensic reports if <em>any</em> auth mechanism fails</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="dmarc-rollout">My Recommended DMARC Rollout Strategy</h3>
+
+<p>Don't jump straight to <code>p=reject</code>. Here's the safe progression I follow:</p>
+
+<ol>
+<li><strong>Week 1-4:</strong> <code>p=none</code> — Monitor reports, identify all legitimate sending sources, fix any alignment issues</li>
+<li><strong>Week 5-8:</strong> <code>p=quarantine; pct=25</code> — Quarantine 25% of failing emails, watch for false positives</li>
+<li><strong>Week 9-10:</strong> <code>p=quarantine; pct=100</code> — Full quarantine</li>
+<li><strong>Week 11+:</strong> <code>p=reject</code> — Full protection. Unauthorized emails are blocked completely.</li>
+</ol>
+
+<h3 id="dmarc-reports">Understanding DMARC Reports (rua and ruf)</h3>
+
+<p><strong>Aggregate reports (rua)</strong> are daily XML files sent by receiving servers. They contain:</p>
+<ul>
+<li>Which IP addresses sent email using your domain</li>
+<li>SPF and DKIM pass/fail results for each source</li>
+<li>DMARC alignment results</li>
+<li>Volume of emails per sending source</li>
+</ul>
+
+<p>Parsing raw XML is painful. Use a free DMARC report analyzer:</p>
+<ul>
+<li><a href="https://dmarcian.com" target="_blank" rel="noopener">dmarcian.com</a> (free tier)</li>
+<li><a href="https://dmarc.postmarkapp.com" target="_blank" rel="noopener">Postmark DMARC Digests</a> (free weekly summaries)</li>
+<li><a href="https://easydmarc.com" target="_blank" rel="noopener">EasyDMARC</a> (free tier with dashboards)</li>
+</ul>
+
+<p><strong>Focus on two things in your reports:</strong></p>
+<ol>
+<li><strong>Unauthorized senders</strong> — IPs sending email from your domain that aren't yours (potential spoofing)</li>
+<li><strong>Legitimate sources failing alignment</strong> — your own services that are passing SPF/DKIM but failing DMARC because the domains don't align</li>
+</ol>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="comparison-table">6. SPF vs DKIM vs DMARC — Quick Comparison</h2>
+
+<div style="overflow-x:auto;">
+<table class="comparison-table">
+<thead>
+<tr><th>Feature</th><th>SPF</th><th>DKIM</th><th>DMARC</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Purpose</strong></td><td>Authorize sending servers</td><td>Verify message integrity</td><td>Set policy + require alignment</td></tr>
+<tr><td><strong>DNS Record Location</strong></td><td><code>yourdomain.com</code></td><td><code>selector._domainkey.yourdomain.com</code></td><td><code>_dmarc.yourdomain.com</code></td></tr>
+<tr><td><strong>Record Type</strong></td><td>TXT</td><td>TXT</td><td>TXT</td></tr>
+<tr><td><strong>What It Checks</strong></td><td>Sending server IP</td><td>Cryptographic signature</td><td>SPF/DKIM alignment with From domain</td></tr>
+<tr><td><strong>Prevents</strong></td><td>Unauthorized servers sending as you</td><td>Email tampering in transit</td><td>Domain spoofing/phishing</td></tr>
+<tr><td><strong>Reporting</strong></td><td>No</td><td>No</td><td>Yes (aggregate + forensic)</td></tr>
+<tr><td><strong>Requires Others?</strong></td><td>Standalone</td><td>Standalone</td><td>Requires SPF or DKIM</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="alignment">7. Understanding Alignment (The #1 Reason "Everything Looks Right But It Still Fails")</h2>
+
+<p>This is where most email authentication guides stop — and where most deliverability problems actually begin.</p>
+
+<p><strong>Alignment</strong> means the domain in the visible <code>From</code> header must match the domain used in SPF or DKIM. DMARC requires at least one of these alignments to pass.</p>
+
+<h3 id="spf-alignment">What Is SPF Alignment?</h3>
+<p>SPF alignment compares:</p>
+<ul>
+<li><strong>From header domain</strong> (what the recipient sees): <code>you@yourdomain.com</code></li>
+<li><strong>Return-Path domain</strong> (envelope sender, often hidden): <code>bounce@yourdomain.com</code></li>
+</ul>
+<p>If both are <code>yourdomain.com</code> (or subdomains in relaxed mode), SPF alignment passes.</p>
+
+<p><strong>Common failure:</strong> Many ESPs set the Return-Path to their own domain (e.g., <code>bounce.sendgrid.net</code>). SPF passes for SendGrid's domain, but it doesn't align with your From domain — so DMARC sees an SPF alignment failure.</p>
+
+<h3 id="dkim-alignment">What Is DKIM Alignment?</h3>
+<p>DKIM alignment compares:</p>
+<ul>
+<li><strong>From header domain</strong>: <code>you@yourdomain.com</code></li>
+<li><strong>DKIM <code>d=</code> domain</strong> (in the DKIM signature): <code>d=yourdomain.com</code></li>
+</ul>
+<p>If both match (or are subdomains in relaxed mode), DKIM alignment passes.</p>
+
+<p><strong>This is why DKIM alignment is often your lifeline.</strong> Even if SPF alignment fails (because the ESP uses their own Return-Path), DKIM alignment can still pass if the ESP signs with your domain's key.</p>
+
+<h3 id="relaxed-vs-strict">Relaxed vs Strict Alignment</h3>
+
+<div style="overflow-x:auto;">
+<table class="comparison-table">
+<thead>
+<tr><th>Mode</th><th>DMARC Tag</th><th>What It Means</th><th>Example</th></tr>
+</thead>
+<tbody>
+<tr><td><strong>Relaxed</strong></td><td><code>adkim=r</code> / <code>aspf=r</code></td><td>Subdomains are allowed — organizational domain must match</td><td><code>mail.yourdomain.com</code> aligns with <code>yourdomain.com</code> ✅</td></tr>
+<tr><td><strong>Strict</strong></td><td><code>adkim=s</code> / <code>aspf=s</code></td><td>Exact domain match required</td><td><code>mail.yourdomain.com</code> does NOT align with <code>yourdomain.com</code> ❌</td></tr>
+</tbody>
+</table>
+</div>
+
+<p><strong>My recommendation:</strong> Start with <strong>relaxed</strong> alignment (<code>adkim=r; aspf=r</code>). Only move to strict if you have a specific security requirement that demands it. Relaxed mode allows subdomains to align, which is necessary for many legitimate sending configurations.</p>
+
+<h3 id="fix-alignment">How to Diagnose and Fix Alignment Failures</h3>
+
+<p>Send a test email to a Gmail address, then view the original message headers. Look for these three lines:</p>
+
+<pre><code>Return-Path: &lt;bounce@yourdomain.com&gt;           ← SPF checks this domain
+From: you@yourdomain.com                        ← DMARC compares against this
+DKIM-Signature: ... d=yourdomain.com; s=s2026;  ← DKIM checks this domain</code></pre>
+
+<p><strong>If SPF alignment fails</strong> (Return-Path domain ≠ From domain):</p>
+<ul>
+<li>Configure your ESP to use a custom Return-Path on your domain</li>
+<li>Or rely on DKIM alignment instead (if the ESP signs with your domain key)</li>
+</ul>
+
+<p><strong>If DKIM alignment fails</strong> (d= domain ≠ From domain):</p>
+<ul>
+<li>Configure your ESP/mail server to sign with your domain, not theirs</li>
+<li>In PowerMTA, verify the <code>dkim-identity</code> matches your From domain</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="multi-domain">8. Multi-Domain and Subdomain Authentication</h2>
+
+<h3 id="outreach-domains">Setting Up Auth for Outreach Domains</h3>
+
+<p>If you use separate domains for cold outreach (which you should — never send cold email from your primary brand domain), each domain needs its own complete authentication:</p>
+
+<ul>
+<li>Separate SPF record at each domain root</li>
+<li>Separate DKIM key pair and DNS record per domain</li>
+<li>Separate DMARC record at <code>_dmarc.outreachdomain.com</code></li>
+</ul>
+
+<p>I typically register 3-5 outreach domains per brand (e.g., <code>trybrand.com</code>, <code>getbrand.io</code>, <code>brandmail.co</code>) and configure each with identical authentication. For more on this setup, see my <a href="email-warmup-guide.html">email warmup guide</a>.</p>
+
+<h3 id="subdomain-rules">Subdomain Inheritance Rules</h3>
+
+<p>This catches people by surprise:</p>
+<ul>
+<li><strong>SPF does NOT inherit.</strong> If you send from <code>mail.yourdomain.com</code>, you need an SPF record at <code>mail.yourdomain.com</code> — not just at <code>yourdomain.com</code>.</li>
+<li><strong>DMARC cascades to subdomains.</strong> A DMARC record at <code>_dmarc.yourdomain.com</code> applies to all subdomains unless overridden. You can use the <code>sp=</code> tag to set a different policy for subdomains: <code>sp=reject</code>.</li>
+<li><strong>DKIM is selector-specific.</strong> The selector DNS record determines which key to use. You can have different selectors for different subdomains.</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="maintenance">9. Post-Setup Maintenance (What Nobody Tells You)</h2>
+
+<p>Setting up authentication once isn't enough. Your DNS records need ongoing maintenance — and most guides completely ignore this.</p>
+
+<h3 id="dkim-rotation">DKIM Key Rotation Schedule</h3>
+
+<p>Rotate your DKIM keys every <strong>6 to 12 months</strong>. Here's my process:</p>
+
+<ol>
+<li>Generate a new key pair with a new selector (e.g., <code>s2026b</code>)</li>
+<li>Publish the new public key in DNS at the new selector</li>
+<li>Update your mail server config to sign with the new key</li>
+<li>Keep the <strong>old selector active in DNS for 72 hours</strong> — emails in transit still need to validate against the old key</li>
+<li>Remove the old selector after 72 hours</li>
+</ol>
+
+<h3 id="spf-audit">SPF Record Auditing</h3>
+
+<p>Every time you add or remove an email service (new ESP, CRM, helpdesk tool), update your SPF record. I audit SPF records quarterly using this checklist:</p>
+<ul>
+<li>Are all <code>include</code> mechanisms still needed?</li>
+<li>Have any services changed their SPF domains?</li>
+<li>Am I still under the 10-lookup limit?</li>
+<li>Are there any IP addresses that should be added or removed?</li>
+</ul>
+
+<h3 id="dmarc-monitoring">Ongoing DMARC Report Monitoring</h3>
+
+<p>Review your DMARC aggregate reports at least monthly. Watch for:</p>
+<ul>
+<li>New unauthorized sending sources (potential spoofing attempts)</li>
+<li>Legitimate services that started failing (often after the service updates their infrastructure)</li>
+<li>Spikes in authentication failures that correlate with deliverability drops</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="validation">10. Validation and Testing Checklist</h2>
+
+<h3 id="cli-validation">Command-Line Validation</h3>
+
+<pre><code># ── Check SPF ──
+dig TXT yourdomain.com +short | grep spf
+# Expected: "v=spf1 ip4:198.51.100.25 ... -all"
+
+# ── Check DKIM ──
+dig TXT s2026._domainkey.yourdomain.com +short
+# Expected: "v=DKIM1; k=rsa; p=MIIBIj..."
+
+# ── Check DMARC ──
+dig TXT _dmarc.yourdomain.com +short
+# Expected: "v=DMARC1; p=none; rua=mailto:..."
+
+# ── Windows users (use nslookup instead of dig) ──
+nslookup -type=txt yourdomain.com
+nslookup -type=txt s2026._domainkey.yourdomain.com
+nslookup -type=txt _dmarc.yourdomain.com</code></pre>
+
+<h3 id="online-tools">Online Validation Tools</h3>
+
+<div style="overflow-x:auto;">
+<table class="comparison-table">
+<thead>
+<tr><th>Tool</th><th>What It Checks</th><th>URL</th></tr>
+</thead>
+<tbody>
+<tr><td>MXToolbox SuperTool</td><td>SPF, DKIM, DMARC, blacklists, MX</td><td><a href="https://mxtoolbox.com/SuperTool.aspx" target="_blank" rel="noopener">mxtoolbox.com</a></td></tr>
+<tr><td>Google Admin Toolbox</td><td>MX, SPF, DKIM, DMARC validation</td><td><a href="https://toolbox.googleapps.com/apps/checkmx/" target="_blank" rel="noopener">Google Check MX</a></td></tr>
+<tr><td>mail-tester.com</td><td>Full deliverability score (send a test email)</td><td><a href="https://www.mail-tester.com" target="_blank" rel="noopener">mail-tester.com</a></td></tr>
+<tr><td>dmarcian</td><td>DMARC record checker + report analysis</td><td><a href="https://dmarcian.com/dmarc-inspector/" target="_blank" rel="noopener">dmarcian.com</a></td></tr>
+</tbody>
+</table>
+</div>
+
+<h3 id="test-email">Sending a Test Email and Reading the Headers</h3>
+
+<p>Send an email to a Gmail address. Open the email → click the three dots → "Show original." Look for these authentication results:</p>
+
+<pre><code>Authentication-Results: mx.google.com;
+  spf=pass (google.com: domain of bounce@yourdomain.com designates 198.51.100.25 as permitted sender)
+  dkim=pass header.d=yourdomain.com header.s=s2026
+  dmarc=pass (p=NONE sp=NONE dis=NONE) header.from=yourdomain.com</code></pre>
+
+<p>All three should show <code>pass</code>. If any shows <code>fail</code> or <code>softfail</code>, check the specific error message — it will tell you exactly what went wrong.</p>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="troubleshooting">11. Common Mistakes and Troubleshooting</h2>
+
+<div style="overflow-x:auto;">
+<table class="comparison-table">
+<thead>
+<tr><th>Symptom</th><th>Likely Cause</th><th>Fix</th></tr>
+</thead>
+<tbody>
+<tr><td>SPF fails — "not permitted sender"</td><td>Sending IP not in SPF record</td><td>Add the server's IP with <code>ip4:</code> or add the service's <code>include:</code></td></tr>
+<tr><td>SPF permerror — "too many lookups"</td><td>SPF record exceeds 10 DNS lookups</td><td>Flatten includes, remove unused services, use subdomains</td></tr>
+<tr><td>DKIM fails — "signature verification failed"</td><td>Public key in DNS doesn't match private key on server</td><td>Regenerate key pair, republish public key, verify selector matches</td></tr>
+<tr><td>DKIM fails — "no key for signature"</td><td>DKIM DNS record not published or wrong selector</td><td>Verify the selector in your DNS matches the selector in your mail server config</td></tr>
+<tr><td>DMARC fails — SPF and DKIM both pass individually</td><td>Alignment failure — domains don't match From header</td><td>Check Return-Path domain (SPF) and d= domain (DKIM) against From domain</td></tr>
+<tr><td>DMARC fails — "policy evaluated: quarantine/reject"</td><td>Authentication failed and DMARC policy is enforcing</td><td>Fix the underlying SPF or DKIM issue, or temporarily set <code>p=none</code> to debug</td></tr>
+<tr><td>Emails go to spam despite all three passing</td><td>Content, reputation, or engagement issue (not auth)</td><td>Check Google Postmaster Tools for domain reputation; review <a href="domain-blacklist-recovery.html">blacklist recovery guide</a></td></tr>
+<tr><td>Multiple SPF records found</td><td>Two TXT records starting with <code>v=spf1</code></td><td>Merge into a single SPF record — you can only have ONE per domain</td></tr>
+</tbody>
+</table>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="faq">Frequently Asked Questions</h2>
+
+<div class="faq-container">
+<h4>Do I need SPF, DKIM, and DMARC? Can I skip one?</h4>
+<p>You need all three. SPF authorizes sending servers, DKIM proves message integrity, and DMARC ties them together with alignment and policy. Since 2024, Google and Yahoo require all three for bulk senders. Without all three, your emails will be rejected or sent to spam.</p>
+
+<h4>What DMARC policy should I start with?</h4>
+<p>Start with <code>p=none</code>. This is monitor-only mode — emails are delivered normally, but you receive reports about authentication failures. Run <code>p=none</code> for 2-4 weeks while monitoring reports. Once all legitimate sources pass, move to <code>p=quarantine</code>, then <code>p=reject</code>.</p>
+
+<h4>What is the SPF 10 DNS lookup limit and how do I fix it?</h4>
+<p>The SPF spec limits records to 10 DNS lookups. Each <code>include</code>, <code>a</code>, <code>mx</code>, and <code>redirect</code> counts as one (nested includes count too). Exceeding 10 causes a permanent error and SPF fails on every email. Fix it by removing unused includes, replacing <code>include</code> with direct <code>ip4</code> entries, or using subdomains with separate SPF records.</p>
+
+<h4>How do I check if my records are set up correctly?</h4>
+<p>Three methods: (1) Command line: <code>dig TXT yourdomain.com +short</code> for SPF, <code>dig TXT selector._domainkey.yourdomain.com</code> for DKIM, <code>dig TXT _dmarc.yourdomain.com</code> for DMARC. (2) MXToolbox SuperTool or Google Admin Toolbox. (3) Send a test email to <a href="https://www.mail-tester.com" target="_blank" rel="noopener">mail-tester.com</a> for a full deliverability score.</p>
+
+<h4>What happens if I don't set up email authentication?</h4>
+<p>Your emails are either sent to spam or rejected at the SMTP level. Gmail returns <code>550-5.7.26</code>, Yahoo returns <code>553 5.7.2</code>. Your domain is also vulnerable to spoofing — anyone can send phishing emails pretending to be you.</p>
+
+<h4>How often should I rotate my DKIM keys?</h4>
+<p>Every 6 to 12 months. Generate a new key pair with a new selector, publish it in DNS, update your mail server, and keep the old selector active for 72 hours to allow in-transit emails to validate.</p>
+
+<h4>What is DMARC alignment and why do my emails still fail?</h4>
+<p>Alignment means the From domain must match the Return-Path domain (SPF alignment) or the DKIM <code>d=</code> domain (DKIM alignment). SPF and DKIM can both pass individually, but if neither aligns with the From domain, DMARC fails. This is the #1 cause of "everything looks right but it still fails." Check your email headers for the Return-Path and <code>d=</code> domains.</p>
+
+<h4>Can SPF, DKIM, and DMARC prevent phishing?</h4>
+<p>Yes, when configured with <code>p=reject</code>. SPF ensures only authorized servers send from your domain, DKIM proves message integrity, and DMARC's reject policy tells receiving servers to block any email that fails authentication. This prevents attackers from sending emails that impersonate your domain.</p>
+
+<h4>How do I set up authentication for multiple domains or subdomains?</h4>
+<p>Each domain needs its own SPF, DKIM key, and DMARC record. SPF does NOT inherit from parent domains — <code>mail.yourdomain.com</code> needs its own SPF record. DMARC does cascade to subdomains (use the <code>sp=</code> tag to control subdomain policy). DKIM is per selector, so you can have different keys per subdomain.</p>
+
+<h4>How do I read DMARC aggregate reports?</h4>
+<p>Aggregate reports (rua) are XML files showing which IPs sent email using your domain and whether they passed authentication. Use a free analyzer like <a href="https://dmarcian.com" target="_blank" rel="noopener">dmarcian</a>, <a href="https://dmarc.postmarkapp.com" target="_blank" rel="noopener">Postmark DMARC</a>, or <a href="https://easydmarc.com" target="_blank" rel="noopener">EasyDMARC</a> to parse them into readable dashboards. Focus on identifying unauthorized senders and fixing legitimate sources that fail alignment.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════ -->
+<h2 id="next-steps">What to Do Next</h2>
+
+<p>Once your SPF, DKIM, and DMARC records are live and validated:</p>
+
+<ol>
+<li><strong>Monitor your DMARC reports for 2-4 weeks</strong> at <code>p=none</code> to catch any alignment issues</li>
+<li><strong>Warm up your sending IPs and domains</strong> — follow my <a href="email-warmup-guide.html">6-week email warmup schedule</a> to build reputation gradually</li>
+<li><strong>Set up Google Postmaster Tools</strong> to track your domain reputation and spam complaint rates</li>
+<li><strong>Progress your DMARC policy</strong> from <code>none</code> → <code>quarantine</code> → <code>reject</code> as you verify all sources pass</li>
+<li><strong>If you get blacklisted</strong>, follow my <a href="domain-blacklist-recovery.html">domain blacklist recovery guide</a> to restore your reputation</li>
+</ol>
+
+<p>Email authentication isn't a set-it-and-forget-it task. Audit your SPF record every time you add or remove a sending service. Rotate your DKIM keys on a schedule. And check your DMARC reports regularly to catch unauthorized use of your domain.</p>
+
+<p>If you're building a complete email sending infrastructure from scratch, start with my <a href="powermta-configuration-guide.html">PowerMTA configuration guide</a> — it covers server setup, Virtual MTAs, IP rotation, and MailWizz integration. This guide (SPF/DKIM/DMARC) is the authentication layer that sits on top of that infrastructure.</p>
+
+<div class="callout callout-info">
+<i class="fa-solid fa-lightbulb callout-icon"></i>
+<div class="callout-body">
+<strong>Need help?</strong> If you're setting up email infrastructure and need hands-on assistance with authentication, deliverability optimization, or PowerMTA configuration, check out my <a href="../email-infrastructure.html">email infrastructure services</a> or reach out directly.
+</div>
+</div>
+
+</div> <!-- /article-content -->
+
+<!-- RELATED POSTS -->
+<div class="related-posts reveal">
+<h3 class="related-title">You might also like</h3>
+<div class="related-grid">
+<a href="powermta-configuration-guide.html" class="related-card">
+<div class="related-card-tag">Email Infrastructure</div>
+<h4 class="related-card-title">How to Configure PowerMTA for Maximum Email Deliverability</h4>
+<div class="related-card-date">Jul 8, 2026</div>
+</a>
+<a href="email-warmup-guide.html" class="related-card">
+<div class="related-card-tag">Deliverability</div>
+<h4 class="related-card-title">How to Warm Up a New Email IP and Domain: My 6-Week Production Schedule</h4>
+<div class="related-card-date">Jul 10, 2026</div>
+</a>
+<a href="domain-blacklist-recovery.html" class="related-card">
+<div class="related-card-tag">Deliverability</div>
+<h4 class="related-card-title">How to Recover from a Blacklisted Email Domain</h4>
+<div class="related-card-date">Jun 30, 2026</div>
+</a>
+<a href="powermta-monitoring-guide.html" class="related-card">
+<div class="related-card-tag">Email Infrastructure</div>
+<h4 class="related-card-title">PowerMTA Monitoring: The Production Playbook</h4>
+<div class="related-card-date">Jul 26, 2026</div>
+</a>
+</div>
+</div>
+</div> <!-- /article-body-col -->
+
+<!-- SIDEBAR -->
+<div class="article-sidebar reveal" style="transition-delay: 0.2s;">
+<!-- ENGAGEMENT BAR -->
+<div class="engagement-bar">
+<div class="views-display" title="Total Views">
+<i class="fa-solid fa-eye"></i>
+<span id="visit-count" class="views-number" data-article="spf-dkim-dmarc-setup-guide" data-base="340">...</span>
+<span class="views-label">Views</span>
+</div>
+<div>
+<div class="engagement-label">React</div>
+<button class="engagement-btn" id="like-btn" data-base="12">
+<i class="fa-solid fa-thumbs-up"></i> <span class="btn-label">Helpful</span> <span id="like-count" class="engagement-count">...</span>
+</button>
+</div>
+<div>
+<button class="engagement-btn" id="dislike-btn" data-base="0">
+<i class="fa-solid fa-thumbs-down"></i> <span class="btn-label">Not for me</span> <span id="dislike-count" class="engagement-count">...</span>
+</button>
+</div>
+<div>
+<div class="engagement-label">Actions</div>
+<button class="engagement-btn" id="share-btn">
+<i class="fa-solid fa-share-nodes"></i> <span class="btn-label">Share Article</span>
+</button>
+</div>
+<div>
+<button class="engagement-btn" id="bookmark-btn">
+<i class="fa-regular fa-bookmark"></i> <span class="btn-label">Bookmark</span>
+</button>
+</div>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<div class="toc-card">
+<div class="toc-title">Table of Contents</div>
+<div class="toc-list">
+<a href="#what-are-spf-dkim-dmarc" class="toc-link">1. What Are SPF, DKIM, DMARC?</a>
+<a href="#why-mandatory" class="toc-link">2. Why Authentication Is Mandatory</a>
+<a href="#spf-setup" class="toc-link">3. Step 1 — Set Up SPF</a>
+<a href="#dkim-setup" class="toc-link">4. Step 2 — Set Up DKIM</a>
+<a href="#dmarc-setup" class="toc-link">5. Step 3 — Set Up DMARC</a>
+<a href="#comparison-table" class="toc-link">6. SPF vs DKIM vs DMARC</a>
+<a href="#alignment" class="toc-link">7. Understanding Alignment</a>
+<a href="#multi-domain" class="toc-link">8. Multi-Domain & Subdomains</a>
+<a href="#maintenance" class="toc-link">9. Post-Setup Maintenance</a>
+<a href="#validation" class="toc-link">10. Validation & Testing</a>
+<a href="#troubleshooting" class="toc-link">11. Troubleshooting</a>
+<a href="#faq" class="toc-link">FAQ</a>
+<a href="#next-steps" class="toc-link">What to Do Next</a>
+</div>
+</div>
+</div> <!-- /article-sidebar -->
+
+</div> <!-- /article-layout -->
+</main>
+
+<!-- FOOTER -->
+<footer class="footer" style="margin-top:0">
+<div class="container">
+<div class="footer-social">
+<a href="https://github.com/AkshayBangarAB" target="_blank" rel="noopener" aria-label="GitHub"><i class="fa-brands fa-github"></i></a>
+<a href="https://www.linkedin.com/in/akshaybangarab/" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
+<a href="mailto:akshayab027@gmail.com" aria-label="Email"><i class="fa-solid fa-envelope"></i></a>
+<a href="https://x.com/akshaybangarab" target="_blank" rel="noopener" aria-label="Twitter/X"><i class="fa-brands fa-x-twitter"></i></a>
+</div>
+<p>Copyright &copy; 2026 Akshay Bangar. All rights reserved.</p>
+</div>
+</footer>
+
+<button class="back-to-top" aria-label="Back to top">↑</button>
+
+<script src="../js/blog.js"></script>
+</body>
+</html>
