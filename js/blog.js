@@ -253,29 +253,109 @@
   }
 
   /* ───────────────────────────────────────────────
-     BLOG LISTING — Tag Filter
+     BLOG LISTING — Tag Filter & Pagination
   ─────────────────────────────────────────────── */
   function initTagFilter() {
     const filterBtns = document.querySelectorAll('.filter-btn');
-    const cards = document.querySelectorAll('.blog-card[data-tags]');
+    const cards = Array.from(document.querySelectorAll('.blog-card[data-tags]'));
     const noResults = document.getElementById('no-results');
+    const paginationContainer = document.getElementById('blog-pagination');
     if (!filterBtns.length) return;
+
+    const ITEMS_PER_PAGE = 9;
+    let currentPage = 1;
+    let currentTag = 'all';
+
+    function renderCards() {
+      // Filter cards
+      const visibleCards = cards.filter((card) => {
+        const tags = card.dataset.tags || '';
+        return currentTag === 'all' || tags.includes(currentTag);
+      });
+
+      // Show no results if empty
+      if (noResults) noResults.style.display = visibleCards.length === 0 ? '' : 'none';
+
+      // Hide all cards first
+      cards.forEach(c => c.style.display = 'none');
+
+      // Calculate pagination
+      const totalPages = Math.ceil(visibleCards.length / ITEMS_PER_PAGE);
+      if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+
+      const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+      const endIndex = startIndex + ITEMS_PER_PAGE;
+
+      // Show cards for current page
+      visibleCards.slice(startIndex, endIndex).forEach(c => c.style.display = '');
+
+      renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+      if (!paginationContainer) return;
+      paginationContainer.innerHTML = '';
+      
+      if (totalPages <= 1) {
+        paginationContainer.style.display = 'none';
+        return;
+      }
+      
+      paginationContainer.style.display = 'flex';
+
+      // Prev button
+      const prevBtn = document.createElement('button');
+      prevBtn.className = 'page-btn';
+      prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.onclick = () => { 
+        currentPage--; 
+        renderCards(); 
+        const gridTop = document.querySelector('.blog-grid-section').offsetTop;
+        window.scrollTo({top: gridTop - 100, behavior: 'smooth'}); 
+      };
+      paginationContainer.appendChild(prevBtn);
+
+      // Page numbers
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+        btn.textContent = i;
+        btn.onclick = () => { 
+          currentPage = i; 
+          renderCards(); 
+          const gridTop = document.querySelector('.blog-grid-section').offsetTop;
+          window.scrollTo({top: gridTop - 100, behavior: 'smooth'}); 
+        };
+        paginationContainer.appendChild(btn);
+      }
+
+      // Next button
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'page-btn';
+      nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+      nextBtn.disabled = currentPage === totalPages;
+      nextBtn.onclick = () => { 
+        currentPage++; 
+        renderCards(); 
+        const gridTop = document.querySelector('.blog-grid-section').offsetTop;
+        window.scrollTo({top: gridTop - 100, behavior: 'smooth'}); 
+      };
+      paginationContainer.appendChild(nextBtn);
+    }
 
     filterBtns.forEach((btn) => {
       btn.addEventListener('click', function () {
         filterBtns.forEach((b) => b.classList.remove('active'));
         this.classList.add('active');
-        const tag = this.dataset.filter;
-        let visible = 0;
-        cards.forEach((card) => {
-          const tags = card.dataset.tags || '';
-          const show = tag === 'all' || tags.includes(tag);
-          card.style.display = show ? '' : 'none';
-          if (show) visible++;
-        });
-        if (noResults) noResults.style.display = visible === 0 ? '' : 'none';
+        currentTag = this.dataset.filter;
+        currentPage = 1; // Reset to page 1 on filter change
+        renderCards();
       });
     });
+
+    // Initial render
+    renderCards();
   }
 
   /* ───────────────────────────────────────────────
